@@ -13,9 +13,10 @@ It converts rails dynamic finders to arel syntax.
   helper_method :dynamic_finder_to_hash do |prefix|
     fields = node.message.to_s[prefix.length..-1].split("_and_")
     if fields.length == node.arguments.length && :hash != node.arguments.first.type
-      fields.length.times.map { |i|
+      fields.length.times.map do |i|
+				fields[i].chop! if fields[i].match(/!$/)
         fields[i] + ": " + node.arguments[i].to_source
-      }.join(", ")
+			end.join(", ")
     else
       "{{arguments}}"
     end
@@ -33,11 +34,15 @@ It converts rails dynamic finders to arel syntax.
     # find_by_... => where(...).first
     with_node type: 'send', message: /^find_by_/ do
       if :find_by_id == node.message
-        replace_with add_receiver_if_necessary("where(id: {{arguments}}).first")
+        replace_with add_receiver_if_necessary("find_by(id: {{arguments}})")
       elsif :find_by_sql != node.message
         hash_params = dynamic_finder_to_hash("find_by_")
-        replace_with add_receiver_if_necessary("where(#{hash_params}).first")
-      end
+				if node.message.to_s.match(/!$/)
+					replace_with add_receiver_if_necessary("find_by!(#{hash_params})")
+				else
+					replace_with add_receiver_if_necessary("find_by(#{hash_params})")
+				end
+			end
     end
 
     # find_last_by_... => where(...).last

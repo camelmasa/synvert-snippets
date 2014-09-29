@@ -17,7 +17,7 @@ class Post < ActiveRecord::Base
     User.find_by_sql(["select * from  users where email = ?", email])
     User.find_by_id(id)
     User.find_by_account_id(Account.find_by_email(account_email).id)
-		User.find_by_account_id!(Account.find_by_email(account_email).id)
+    User.find_by_account_id!(Account.find_by_email(account_email).id)
     User.find_or_create_by_email_and_login(parmas)
     User.find_or_initialize_by_account_id(:account_id => account_id)
   end
@@ -37,7 +37,7 @@ class Post < ActiveRecord::Base
     User.find_by_sql(["select * from  users where email = ?", email])
     User.find_by(id: id)
     User.find_by(account_id: Account.where(email: account_email).first.id)
-		User.find_by!(account_id: Account.where(email: account_email).first.id)
+    User.find_by!(account_id: Account.where(email: account_email).first.id)
     User.find_or_create_by(parmas)
     User.find_or_initialize_by(:account_id => account_id)
   end

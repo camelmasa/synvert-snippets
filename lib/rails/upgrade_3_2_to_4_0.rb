@@ -234,8 +234,12 @@ It upgrades rails from 3.2 to 4.0.
   within_files 'app/controllers/**/*.rb' do
     # before_filter :load_post => before_action :load_post
     # after_filter :increment_view_count => after_filter :increment_view_count
-    with_node type: 'send', receiver: nil, message: /(before|after)_filter$/ do
-      new_message = node.message.to_s.sub('filter', 'action')
+    with_node type: 'send', receiver: nil, message: /_filter$/ do
+      new_message = if node.message == :skip_filter
+                      'skip_action_callback' 
+                    else
+                      node.message.to_s.sub('filter', 'action')
+                    end
       replace_with "#{new_message} {{arguments}}"
     end
   end

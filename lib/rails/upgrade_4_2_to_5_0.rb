@@ -135,4 +135,41 @@ Synvert::Rewriter.new 'rails', 'upgrade_4_2_to_5_0' do
       replace_with 'LoadError'
     end
   end
+
+  within_files 'spec/controllers/**/*.rb' do
+    with_node type: :send, receiver: nil, message: :xhr do
+      source = node.children[4..-1].map(&:to_source).join(', ')
+      unless source&.empty?
+        source = "params: { #{source} }, "
+      end
+      replace_with "#{node.children[2].to_value.to_s} #{node.children[3].to_source}, #{source}xhr: true"
+    end
+  end
+
+  within_files 'spec/controllers/**/*.rb' do
+    with_node type: :send, receiver: nil, message: /get|post|put|delete/ do
+      case node.arguments[1]&.type
+      when :ivar
+        with_node type: :ivar do
+          replace_with "params: #{node.to_source}"
+        end
+      when :hash
+        hash_replace = false
+        with_node type: :hash do
+          if !hash_replace
+            if node.to_source == '{}'
+              replace_with 'params: {}'
+            else
+              replace_with "params: { #{node.to_source.gsub(/^\{(.*)\}$/, '\1').strip} }"
+            end
+            hash_replace = true
+          end
+        end unless node.arguments[1].has_key?(:params)
+      when :send
+        with_node type: :send, message: :params do
+          replace_with 'params: params'
+        end
+      end
+    end
+  end
 end

@@ -147,7 +147,7 @@ Synvert::Rewriter.new 'rails', 'upgrade_4_2_to_5_0' do
   end
 
   within_files 'spec/controllers/**/*.rb' do
-    with_node type: :send, receiver: nil, message: /get|post|put|delete/ do
+    with_node type: :send, receiver: nil, message: /get|post|patch|put|delete/ do
       case node.arguments[1]&.type
       when :ivar
         with_node type: :ivar do
